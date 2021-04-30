@@ -1,0 +1,57 @@
+- hosts: localhost
+  vars_prompt:
+    - name: con_name
+      private: no
+      prompt: "Enter Container Name"
+
+
+  tasks:
+  - name: Configure YUM repo for docker
+    yum_repository:
+      name: docker
+      description: YUM repository for docker
+      baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+      gpgcheck: no
+
+      
+  - name: Install docker-ce
+    command: "yum install docker-ce --nobest -y"
+  - name: start docker service
+    service:
+      name: docker
+      state: started
+      enabled: yes
+
+ 
+
+
+  - name: Pull httpd image
+    docker_image:
+      name: sdarshil/web:v1
+      source: pull
+
+  - name: Launch docker container with httpd image
+    docker_container:
+      name: "{{ con_name }}"
+      image: httpd
+      state: started
+
+  - name: retrive container ip
+    docker_container_info:
+              name: "{{ con_name}}"
+    register: result
+
+  - name: retrive IP
+    debug: 
+       var: result['container']['NetworkSettings']['IPAddress']
+
+
+  - name: update the inventory with DockerIP
+    template:
+          src: dockerip.txt.j2
+          dest: /root/ansi/dockertask/dockerip.txt
+
+  - name: Stop firewall to allow all traffic
+    service: 
+      name: firewalld
+      state: stopped

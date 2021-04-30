@@ -1,0 +1,15 @@
+- hosts: all
+  tasks: 
+
+  - name: install httpd on containr
+    yum:
+      name: httpd
+      state: latest
+
+  - name: copy content in webpage 
+    copy: 
+      src: index.html
+      dest: /var/www/html/index.html
+
+  - name: start service
+    command: /usr/sbin/httpd
